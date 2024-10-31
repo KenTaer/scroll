@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebP Image Upload</title>
+    <style>
+        /* Styling the image container to display vertically */
+        input {
+            color: white;
+        }
+        #info {
+            color: white;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        body {
+            padding: 0;
+            margin: 0;
+            box-sizing: border-box;
+            background-color: black;
+        }
+        #imageContainer {
+            display: flex;
+            flex-direction: column;
+            margin-top: 20px;
+        }
+
+        /* Style for each image box */
+        .image-box {
+            margin-bottom: 2px;
+            width: 100%;
+            overflow: hidden;
+            box-sizing: border-box;
+            text-align: center;
+        }
+
+        /* Make each image fill the container and keep aspect ratio */
+        .image-box img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        /* Add a label below each image for the filename */
+        .image-label {
+            font-weight: bold;
+            font-size: 10px; /* Adjust font size for better visibility */
+            color: white;
+        }
+
+        /* File input styling */
+        #imageUpload {
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <!-- File input for image upload -->
+    <input type="file" id="imageUpload" multiple accept=".jpg, .jpeg, .png, .webp">
+    <!-- <p id="info">HELLO</p> -->
+    <!-- Div where images will be appended -->
+    <div id="imageContainer"></div>
+
+    <script>
+        // Reference to the elements
+        const imageUpload = document.getElementById('imageUpload');
+        const imageContainer = document.getElementById('imageContainer');
+
+        // Function to extract the numeric part from a filename
+        function extractNumberFromFilename(filename) {
+            const match = filename.match(/(\d+)/); // Find the first sequence of digits
+            return match ? parseInt(match[0], 10) : null; // Return the number or null
+        }
+
+        // Event listener for file input change (upload images)
+        imageUpload.addEventListener('change', function(event) {
+            const files = Array.from(event.target.files); // Get the selected files
+
+            // Clear the container before appending new images
+            imageContainer.innerHTML = '';
+
+            // Define accepted file types
+            const acceptedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+
+            // Filter only accepted image types and extract number from filename
+            const imageFiles = files
+                .filter(file => acceptedTypes.includes(file.type)) // Filter only accepted types
+                .map(file => ({
+                    name: file.name,
+                    file: file,
+                    number: extractNumberFromFilename(file.name) // Extract numeric part safely
+                }))
+                .filter(fileObj => fileObj.number !== null); // Filter out files without a numeric part
+
+            // Sort the array by the numeric key
+            imageFiles.sort((a, b) => a.number - b.number);
+
+            // Create an array of promises for reading files
+            const readPromises = imageFiles.map(({ file, name }) => {
+                return new Promise((resolve) => {
+                    const reader = new FileReader();
+
+                    // On load, resolve with the image data and filename
+                    reader.onload = function(e) {
+                        resolve({ src: e.target.result, name });
+                    };
+
+                    // Read the image file as a data URL
+                    reader.readAsDataURL(file);
+                });
+            });
+
+            // Wait for all files to be read
+            Promise.all(readPromises).then((imageData) => {
+                // Loop through each image data
+                imageData.forEach(({ src, name }) => {
+                    const imageBox = document.createElement('div');
+                    imageBox.classList.add('image-box');
+
+                    // Create the image element
+                    const img = document.createElement('img');
+                    img.src = src;
+
+                    // Create a label to display the file name
+                    const label = document.createElement('div');
+                    label.classList.add('image-label');
+                    label.textContent = name; // Set the file name as text
+
+                    // Append image and label to the image box
+                    imageBox.appendChild(img);
+                    imageBox.appendChild(label);
+
+                    // Append the image box to the container
+                    imageContainer.appendChild(imageBox);
+                });
+            });
+        });
+
+        // // Reference to the elements
+        // const imageUpload = document.getElementById('imageUpload');
+        // // let txt = "";
+        // // let info = document.getElementById('info');
+        // const imageContainer = document.getElementById('imageContainer');
+
+        // // Function to extract the numeric part from a filename
+        // function extractNumberFromFilename(filename) {
+        //     const match = filename.match(/(\d+)/); // Find the first sequence of digits
+        //     return match ? parseInt(match[0], 10) : null; // Return the number or null
+        // }
+
+        // // Event listener for file input change (upload images)
+        // imageUpload.addEventListener('change', function(event) {
+        //     const files = Array.from(event.target.files); // Get the selected files
+
+        //     // Clear the container before appending new images
+        //     imageContainer.innerHTML = '';
+
+        //     // Create an array to store the files with their numeric part extracted
+        //     const imageFiles = files
+        //         .filter(file => file.type === 'image/webp') // Filter only WebP images
+        //         .map(file => ({
+        //             name: file.name,
+        //             file: file,
+        //             number: extractNumberFromFilename(file.name) // Extract numeric part safely
+        //         }))
+        //         .filter(fileObj => fileObj.number !== null); // Filter out files without a numeric part
+
+        //     // Sort the array by the numeric key
+        //     imageFiles.sort((a, b) => a.number - b.number);
+
+        //     // Create an array of promises for reading files
+        //     const readPromises = imageFiles.map(({ file, name }) => {
+        //         return new Promise((resolve) => {
+        //             const reader = new FileReader();
+
+        //             // On load, resolve with the image data and filename
+        //             reader.onload = function(e) {
+        //                 resolve({ src: e.target.result, name });
+        //             };
+
+        //             // Read the image file as a data URL
+        //             reader.readAsDataURL(file);
+        //         });
+        //     });
+
+        //     // Wait for all files to be read
+        //     Promise.all(readPromises).then((imageData) => {
+        //         // Loop through each image data
+        //         imageData.forEach(({ src, name }) => {
+        //             const imageBox = document.createElement('div');
+        //             imageBox.classList.add('image-box');
+
+        //             // Create the image element
+        //             const img = document.createElement('img');
+        //             img.src = src;
+
+        //             // Create a label to display the file name
+        //             const label = document.createElement('div');
+        //             label.classList.add('image-label');
+        //             // txt += `${name} //[] `;
+        //             // info.textContent = txt;
+        //             // label.textContent = name; // Set the file name as text
+
+        //             // Append image and label to the image box
+        //             imageBox.appendChild(img);
+        //             imageBox.appendChild(label);
+
+        //             // Append the image box to the container
+        //             imageContainer.appendChild(imageBox);
+        //         });
+        //     });
+        // });
+    </script>
+</body>
+</html>
